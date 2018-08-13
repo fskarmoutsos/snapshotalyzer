@@ -14,4 +14,7 @@ fotis uses the configuration file created by the AWS CLI e.g.
 
 ##Running
 
-`pipenv run python "fotis.py"`
+`pipenv run python "fotis.py" <command> <--project=PROJECT>`
+
+*command* is list, start or stop
+*project* is optional
