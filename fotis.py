@@ -1,4 +1,5 @@
 import boto3
+import botocore
 import click
 
 session = boto3.Session(profile_name = 'fotis')
@@ -26,7 +27,7 @@ def snapshots():
 @snapshots.command('list')
 @click.option('--project', default=None,
     help="Only snapshots for project (tag Project:<name>)")
-def list_volumes(project):
+def list_snapshots(project):
     "List EC2 snapshots"
 
     instances = filter_instances(project)
@@ -81,17 +82,26 @@ def create_snapshots(project):
 
     for i in instances:
         print("Stopping {0}...".format(i.id))
+        try:
+            i.stop()
+        except botocore.exceptions.ClientError as e:
+            print("Could not stop {0}.".format(i.id) + str(e))
+            continue
 
-        i.stop()
         i.wait_until_stopped()
 
         for v in i.volumes.all():
-            print("  Creating snapshots of {0}".format(v.id))
+            print("  Creating snapshots of {0} ".format(v.id))
             v.create_snapshot(Description="Created by SnapshotAlyzer")
 
         print("Starting {0}...".format(i.id))
 
-        i.start()
+        try:
+            i.start()
+        except botocore.exceptions.ClientError as e:
+            print("Could not start {0} .".format(i.id) + str(e))
+            continue
+
         i.wait_until_running()
     print("Job's done!")
 
